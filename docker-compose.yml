@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: gabriel
+      POSTGRES_PASSWORD: IglbICMUq0qvrVXLkYhVC5wvHWP1TtoW
+      POSTGRES_DB: drug_discovery
+    ports:
+      - "5432:5432"
