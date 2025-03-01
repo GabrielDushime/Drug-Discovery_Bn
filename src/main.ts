@@ -20,8 +20,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Use PORT from environment variable (provided by Render)
-  const port = process.env.PORT || 8000;
+
+  const port = process.env.PORT || 3000;
   await app.listen(port);
   
   console.log(`Welcome to Scientific Computing for Drug Discovery!`);

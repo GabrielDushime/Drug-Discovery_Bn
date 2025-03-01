@@ -3,8 +3,8 @@ import { INestApplication } from '@nestjs/common';
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
-    .setTitle('Archive Management System Documentation(BNR)')
-    .setDescription('The API description for Archive Management System')
+    .setTitle('Scientific Computing for Drug Discovery ')
+    .setDescription('The API description for Scientific Computing for Drug Discovery ')
     .setVersion('1.0')
     .addBearerAuth(
       {
