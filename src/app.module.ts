@@ -1,19 +1,29 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { MolecularModel } from './molecular-models/entities/molecular-model.entity';
+import { User } from './users/entities/user.entity';
+import { Simulation } from './simulations/entities/simulation.entity';
+import { MolecularModelsModule } from './molecular-models/molecular-models.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,  
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
+      entities: [User, MolecularModel, Simulation],
       synchronize: true, 
       ssl: { rejectUnauthorized: false }, 
     }),
-   
-    // ...other modules
+    UsersModule,
+    AuthModule,
+    MolecularModelsModule,
   ],
 })
 export class AppModule {}

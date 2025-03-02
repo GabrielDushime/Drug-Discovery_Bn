@@ -1,10 +1,10 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 
-export function setupSwagger(app: INestApplication): void {
-  const config = new DocumentBuilder()
-    .setTitle('Scientific Computing for Drug Discovery ')
-    .setDescription('The API description for Scientific Computing for Drug Discovery ')
+export function setupSwagger(app: INestApplication) {
+  const options = new DocumentBuilder()
+    .setTitle('Scientific Computing for Drug Discovery API')
+    .setDescription('API for molecular simulation and drug discovery')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -15,6 +15,7 @@ export function setupSwagger(app: INestApplication): void {
       'Authentication',
     )
     .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('api/docs', app, document);
 }
