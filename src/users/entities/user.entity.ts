@@ -9,10 +9,12 @@ import {
   import { MolecularModel } from '../../molecular-models/entities/molecular-model.entity';
   import { Simulation } from '../../simulations/entities/simulation.entity';
   
-  export enum UserRole {
-    RESEARCHER = 'researcher',
-    ADMIN = 'admin',
-  }
+
+export enum UserRole {
+  RESEARCHER = 'researcher',
+  ADMIN = 'admin',
+  USER = "USER"
+}
   
   @Entity('users')
   export class User {

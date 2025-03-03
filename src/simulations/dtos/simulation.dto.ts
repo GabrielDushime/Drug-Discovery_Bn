@@ -99,10 +99,10 @@ export class SimulationResponseDto {
   @ApiProperty()
   createdAt: Date;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty()
   startedAt: Date;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty()
   completedAt: Date;
 
   @ApiProperty()

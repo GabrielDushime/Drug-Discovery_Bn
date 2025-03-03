@@ -7,6 +7,7 @@ import { MolecularModel } from './molecular-models/entities/molecular-model.enti
 import { User } from './users/entities/user.entity';
 import { Simulation } from './simulations/entities/simulation.entity';
 import { MolecularModelsModule } from './molecular-models/molecular-models.module';
+import { SimulationsModule } from './simulations/simulation.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MolecularModelsModule } from './molecular-models/molecular-models.modul
     UsersModule,
     AuthModule,
     MolecularModelsModule,
+    SimulationsModule ,
   ],
 })
 export class AppModule {}

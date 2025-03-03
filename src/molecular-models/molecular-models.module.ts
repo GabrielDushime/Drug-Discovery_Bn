@@ -16,7 +16,7 @@ import { MolecularValidationService } from './molecular-validation.service';
       storage: diskStorage({
         destination: (req, file, cb) => {
           const uploadPath = path.join(process.cwd(), 'uploads/molecular-models');
-          // Create directory if it doesn't exist
+        
           if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
           }
@@ -41,6 +41,9 @@ import { MolecularValidationService } from './molecular-validation.service';
   ],
   controllers: [MolecularModelsController],
   providers: [MolecularModelsService, MolecularValidationService],
-  exports: [MolecularModelsService],
+  exports: [
+    MolecularModelsService,
+    TypeOrmModule.forFeature([MolecularModel]) 
+  ],
 })
 export class MolecularModelsModule {}

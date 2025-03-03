@@ -15,14 +15,14 @@ export class MolecularModelsService {
     private molecularValidationService: MolecularValidationService,
   ) {}
 
+
   async create(
     createMolecularModelDto: CreateMolecularModelDto,
     file: Express.Multer.File,
     userId: string,
   ): Promise<MolecularModelResponseDto> {
     const { name, description, format } = createMolecularModelDto;
-    
-   
+
     let modelFormat = format;
     if (!modelFormat) {
       const ext = path.extname(file.originalname).toLowerCase();
@@ -31,24 +31,24 @@ export class MolecularModelsService {
       else if (ext === '.sdf') modelFormat = ModelFormat.SDF;
       else throw new Error('Unsupported file format');
     }
-    
+
    
     const validation = await this.molecularValidationService.validateMolecularModel(
       file.path,
       modelFormat,
     );
+
     
-    // Create and save the molecular model
     const molecularModel = this.molecularModelRepository.create({
       name,
       description,
       format: modelFormat,
-      filePath: file.path,  
+      filePath: file.path,
       isValidated: validation.isValid,
       validationResults: validation.results,
       userId,
     });
-    
+
     const savedModel = await this.molecularModelRepository.save(molecularModel);
     return this.toResponseDto(savedModel);  
   }
@@ -60,15 +60,15 @@ export class MolecularModelsService {
       name: model.name,
       description: model.description,
       format: model.format,
-      filePath: model.filePath,  
+      filePath: model.filePath,
       isValidated: model.isValidated,
       validationResults: model.validationResults,
       uploadedAt: model.uploadedAt,
       userId: model.userId,
     };
   }
-  
 
+ 
   async findAll(userId: string): Promise<MolecularModelResponseDto[]> {
     const models = await this.molecularModelRepository.find({
       where: { userId },
@@ -76,6 +76,7 @@ export class MolecularModelsService {
     });
     return models.map(model => this.toResponseDto(model));  
   }
+
 
   async findOne(id: string): Promise<MolecularModelResponseDto> {
     const model = await this.molecularModelRepository.findOne({ where: { id } });
@@ -85,33 +86,35 @@ export class MolecularModelsService {
     return this.toResponseDto(model);  
   }
 
+ 
   async remove(id: string, userId: string): Promise<void> {
     const model = await this.molecularModelRepository.findOne({ where: { id, userId } });
     if (!model) {
       throw new NotFoundException(`Molecular model with ID ${id} not found`);
     }
 
-   
+    
     try {
       if (fs.existsSync(model.filePath)) {
-        fs.unlinkSync(model.filePath);  
+        fs.unlinkSync(model.filePath); 
       }
     } catch (error) {
-      
       console.error(`Error deleting file: ${error.message}`);
     }
-    
-    await this.molecularModelRepository.remove(model);
+
+    await this.molecularModelRepository.remove(model);  
   }
 
+  
   async getModelFile(id: string): Promise<{ path: string; filename: string }> {
-    const model = await this.findOne(id);
-    
+    const model = await this.findOne(id); 
+
+   
     if (!fs.existsSync(model.filePath)) {
       throw new NotFoundException('Model file not found on disk');
     }
-    
-    const filename = path.basename(model.filePath);
-    return { path: model.filePath, filename };  
+
+    const filename = path.basename(model.filePath); 
+    return { path: model.filePath, filename }; 
   }
 }
