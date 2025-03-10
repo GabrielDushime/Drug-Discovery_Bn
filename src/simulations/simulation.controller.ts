@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, HttpException, HttpStatus } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, HttpException, HttpStatus, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -82,4 +82,30 @@ export class SimulationsController {
       throw new HttpException(error.message || 'Simulation not found', HttpStatus.NOT_FOUND);
     }
   }
+  @Post('/run-dask/:id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Run Distributed Simulation with Dask' })
+  @ApiParam({ name: 'id', description: 'Simulation ID to run', type: 'string' })
+  @ApiResponse({ status: 200, description: 'Simulation started successfully' })
+  @ApiResponse({ status: 404, description: 'Simulation not found' })
+  @ApiResponse({ status: 500, description: 'Simulation execution failed' })
+  async runSimulation(@Param('id') id: string) {
+    try {
+    
+      const result = await this.simulationsService.runDistributedSimulation(id);
+      
+      return { 
+        message: 'Simulation executed successfully on Dask cluster', 
+        simulationId: id,
+        result 
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to execute simulation on Dask: ' + error.message);
+    }
+  }
+
+
 }

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ModelFormat } from './entities/molecular-model.entity';
+import { exec } from 'child_process';
 
 @Injectable()
 export class MolecularValidationService {
@@ -9,10 +10,10 @@ export class MolecularValidationService {
 
   async validateMolecularModel(filePath: string, format: ModelFormat): Promise<{ isValid: boolean; results: any }> {
     try {
-      // Read file content
+    
       const fileContent = fs.readFileSync(filePath, 'utf8');
       
-      // Simple validation based on file format
+      
       switch (format) {
         case ModelFormat.PDB:
           return this.validatePDB(fileContent);
@@ -31,10 +32,22 @@ export class MolecularValidationService {
       };
     }
   }
+  
+  async validatePDBUsingPython(filePath: string): Promise<{ isValid: boolean; results: any }> {
+    return new Promise((resolve, reject) => {
+        const scriptPath = path.join(__dirname, '../../scripts/molecular_validation.py');
+        exec(`python ${scriptPath} ${filePath}`, (error, stdout, stderr) => {
+            if (error) {
+                this.logger.error(`BioPython validation failed: ${stderr}`);
+                return reject({ isValid: false, error: "Validation failed" });
+            }
+            resolve(JSON.parse(stdout));
+        });
+    });
+}
 
   private validatePDB(content: string): { isValid: boolean; results: any } {
-    // Simple PDB validation
-    // Check for required records (ATOM, HETATM, TER, etc.)
+   
     const hasAtomRecords = content.includes('ATOM') || content.includes('HETATM');
     
     if (!hasAtomRecords) {
@@ -47,7 +60,7 @@ export class MolecularValidationService {
       };
     }
     
-    // Count atoms and check structure
+   
     const atomLines = content.split('\n').filter(line => 
       line.startsWith('ATOM') || line.startsWith('HETATM')
     );
@@ -57,13 +70,13 @@ export class MolecularValidationService {
       results: {
         atomCount: atomLines.length,
         message: 'PDB file is valid',
-        warnings: [] // Could add warnings for specific issues
+        warnings: [] 
       }
     };
   }
 
   private validateMOL2(content: string): { isValid: boolean; results: any } {
-    // Simple MOL2 validation
+    
     const hasMoleculeSection = content.includes('@<TRIPOS>MOLECULE');
     const hasAtomSection = content.includes('@<TRIPOS>ATOM');
     const hasBondSection = content.includes('@<TRIPOS>BOND');
@@ -81,15 +94,15 @@ export class MolecularValidationService {
       };
     }
     
-    // Count atoms and bonds
+ 
     const lines = content.split('\n');
     let atomCount = 0;
     let bondCount = 0;
     
-    // Parse MOL2 counts from molecule section
+   
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].includes('@<TRIPOS>MOLECULE')) {
-        // Counts are usually in the second line after the MOLECULE tag
+       
         if (i + 2 < lines.length) {
           const countLine = lines[i + 2].trim().split(/\s+/);
           if (countLine.length >= 2) {
@@ -112,8 +125,7 @@ export class MolecularValidationService {
   }
 
   private validateSDF(content: string): { isValid: boolean; results: any } {
-    // Simple SDF validation
-    // Check for molecule header and connectivity data
+   
     const lines = content.split('\n');
     
     if (lines.length < 4) {
@@ -126,7 +138,7 @@ export class MolecularValidationService {
       };
     }
     
-    // Check if the counts line (4th line) is present and valid
+ 
     const countsLine = lines[3].trim();
     if (countsLine.length < 6) {
       return {
@@ -138,7 +150,7 @@ export class MolecularValidationService {
       };
     }
     
-    // Parse atom and bond counts
+   
     const atomCount = parseInt(countsLine.substring(0, 3).trim());
     const bondCount = parseInt(countsLine.substring(3, 6).trim());
     
@@ -152,7 +164,7 @@ export class MolecularValidationService {
       };
     }
     
-    // Check if the file contains enough lines for all atoms and bonds
+   
     if (lines.length < 4 + atomCount + bondCount) {
       return {
         isValid: false,
