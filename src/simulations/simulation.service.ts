@@ -33,7 +33,6 @@ export class SimulationService {
     const molecularModel = await this.molecularModelRepository.findOne({ where: { id: molecularModelId } });
     if (!molecularModel) throw new NotFoundException('Molecular model not found');
 
-    // Create a new simulation with initialized timestamps
     const currentTime = new Date();
     
     const simulation = this.simulationRepository.create({
@@ -63,7 +62,7 @@ export class SimulationService {
     if (updateDto.errorMessage) simulation.errorMessage = updateDto.errorMessage;
     if (updateDto.results) simulation.results = updateDto.results;
     
-    // These conditions will override the initial timestamps when status changes
+    
     if (updateDto.status === SimulationStatus.COMPLETED) {
       simulation.completedAt = new Date();
     }
@@ -113,8 +112,8 @@ export class SimulationService {
       
       this.logger.log(`Starting Dask simulation for ID: ${simulationId}`);
       
-      // Modified to handle JSON output properly
-      const safeJson = JSON.stringify(simulationData); // Keep JSON structure
+     
+      const safeJson = JSON.stringify(simulationData); 
       const command = `python ${scriptPath} ${simulationId} '${safeJson}'`;
       
       this.logger.log(`Executing command: ${command}`);
@@ -131,7 +130,7 @@ export class SimulationService {
         }
         
         try {
-          // Look for valid JSON in the output by finding the first '{' and last '}'
+         
           const jsonStartIndex = stdout.indexOf('{');
           const jsonEndIndex = stdout.lastIndexOf('}') + 1;
           
@@ -160,7 +159,7 @@ export class SimulationService {
     });
   }
 
-  // New method to extract analytics from simulation results
+
   async getSimulationAnalytics(simulationId: string): Promise<SimulationAnalyticsDto> {
     const simulation = await this.simulationRepository.findOne({ 
       where: { id: simulationId }
@@ -180,7 +179,7 @@ export class SimulationService {
     
     const results = simulation.results as any;
     
-    // Create the analytics response
+    
     const analytics: SimulationAnalyticsDto = {
       id: simulation.id,
       name: simulation.name,

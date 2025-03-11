@@ -108,7 +108,7 @@ export class SimulationsController {
     }
   }
 
-  // New endpoint for retrieving simulation analytics
+  
   @Get('/analytics/:id')
   @Roles(UserRole.ADMIN, UserRole.USER)
   @ApiOperation({ summary: 'Get processed analytics data for a completed simulation' })

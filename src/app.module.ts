@@ -8,6 +8,7 @@ import { User } from './users/entities/user.entity';
 import { Simulation } from './simulations/entities/simulation.entity';
 import { MolecularModelsModule } from './molecular-models/molecular-models.module';
 import { SimulationsModule } from './simulations/simulation.module';
+import { ExportVisualizationModule } from './export-visualization/export-visualization.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SimulationsModule } from './simulations/simulation.module';
     AuthModule,
     MolecularModelsModule,
     SimulationsModule ,
+    ExportVisualizationModule,
   ],
 })
 export class AppModule {}
