@@ -1,49 +1,48 @@
+# scripts/dask_worker.py
 from dask.distributed import Worker, Client
+import openmm as mm
+import openmm.app as app
+import openmm.unit as unit
+import numpy as np
 import sys
 import json
+import os
 import time
 
+import json
+import sys
 def run_simulation(task_id, data):
-    """Simulates a molecular dynamics computation (placeholder for OpenMM integration)."""
-    print(f"Running simulation for task {task_id} with data: {data}", file=sys.stderr)
-    
-    # Parse the data to extract simulation details
+    """Runs molecular simulations using OpenMM based on the provided parameters."""
     try:
-        simulation_data = json.loads(data)
-        
-        # Check if we have molecular model info
-        model_name = simulation_data.get('modelName', 'Unknown Model')
-        simulation_type = simulation_data.get('type', 'Unknown Type')
-        
-        time.sleep(5)  # Simulate computation time
-        
-        # Create a more informative result with the molecular model name
+        print(f"Received Task ID: {task_id}", file=sys.stderr)
+        print(f"Received Raw Data: {data}", file=sys.stderr)
+
+        # Ensure proper JSON parsing
+        if isinstance(data, str):
+            data = data.strip("'")  # Remove surrounding single quotes if present
+            simulation_data = json.loads(data)
+        else:
+            simulation_data = data
+
+        # Extract parameters
+        parameters = simulation_data.get("parameters", {})
+        if not parameters:
+            raise ValueError("Missing simulation parameters.")
+
+        # Mock response
         result = {
             "task_id": task_id,
             "status": "completed",
-            "modelName": model_name,
-            "simulationType": simulation_type,
-            "computationTime": "5 seconds",
-            "metrics": {
-                "energy": -500.23,
-                "temperature": 310.15,
-                "rmsd": 1.25
-            }
-        }
-    except json.JSONDecodeError:
-        # Fallback if data isn't valid JSON
-        result = {
-            "task_id": task_id,
-            "status": "completed",
-            "output": f"Results for {data}"
+            "parameters": parameters,
         }
     
-    return result
+    except Exception as e:
+        result = {"task_id": task_id, "status": "failed", "error": str(e)}
+
+    print(json.dumps(result))
 
 if __name__ == "__main__":
-    task_id = sys.argv[1]
-    data = sys.argv[2]
-    
-    result = run_simulation(task_id, data)
-    # Only output the JSON result to stdout for NestJS to parse
-    print(json.dumps(result))
+    task_id = sys.argv[1] if len(sys.argv) > 1 else "unknown_task"
+    json_data = sys.argv[2] if len(sys.argv) > 2 else "{}"
+
+    run_simulation(task_id, json_data)

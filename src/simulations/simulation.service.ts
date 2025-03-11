@@ -113,7 +113,16 @@ export class SimulationService {
       this.logger.log(`Starting Dask simulation for ID: ${simulationId}`);
       
       // Modified to handle JSON output properly
-      exec(`python ${scriptPath} ${simulationId} "${simulationData}"`, (error, stdout, stderr) => {
+      const safeJson = JSON.stringify(simulationData); // Keep JSON structure
+      const command = `python ${scriptPath} ${simulationId} '${safeJson}'`;
+      
+      this.logger.log(`Executing command: ${command}`);
+      
+      exec(command, (error, stdout, stderr) => {
+      
+    
+
+      
         if (error) {
           this.logger.error(`Dask computation failed for simulation ${simulationId}: ${stderr}`);
           

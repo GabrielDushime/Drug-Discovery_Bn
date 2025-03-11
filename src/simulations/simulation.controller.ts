@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, HttpException, HttpStatus, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, HttpException, HttpStatus, InternalServerErrorException, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -14,6 +14,8 @@ import { Request } from '../common/interfaces/request.interface';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class SimulationsController {
+  private readonly logger = new Logger(SimulationsController.name);
+
   constructor(private readonly simulationsService: SimulationService) {}
 
   @Post()
@@ -27,15 +29,11 @@ export class SimulationsController {
   async create(@Body() createSimulationDto: CreateSimulationDto, @Req() req: Request) {
     try {
       const user = req.user;
-
-     
       if (!user) {
         throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
       }
-
       return await this.simulationsService.createSimulation(createSimulationDto, user.id);
     } catch (error) {
-     
       throw new HttpException(error.message || 'Failed to create simulation', HttpStatus.BAD_REQUEST);
     }
   }
@@ -82,30 +80,31 @@ export class SimulationsController {
       throw new HttpException(error.message || 'Simulation not found', HttpStatus.NOT_FOUND);
     }
   }
+
   @Post('/run-dask/:id')
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Run Distributed Simulation with Dask' })
+  @ApiOperation({ summary: 'Run Distributed Simulation with OpenMM & Dask' })
   @ApiParam({ name: 'id', description: 'Simulation ID to run', type: 'string' })
   @ApiResponse({ status: 200, description: 'Simulation started successfully' })
   @ApiResponse({ status: 404, description: 'Simulation not found' })
   @ApiResponse({ status: 500, description: 'Simulation execution failed' })
   async runSimulation(@Param('id') id: string) {
     try {
-    
+      this.logger.log(`Starting OpenMM simulation for ID: ${id}`);
       const result = await this.simulationsService.runDistributedSimulation(id);
+      this.logger.log(`Simulation ${id} executed successfully with OpenMM.`);
       
       return { 
-        message: 'Simulation executed successfully on Dask cluster', 
+        message: 'Simulation executed successfully on Dask cluster with OpenMM', 
         simulationId: id,
         result 
       };
     } catch (error) {
+      this.logger.error(`Failed to execute simulation ${id} on OpenMM: ${error.message}`);
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException('Failed to execute simulation on Dask: ' + error.message);
+      throw new InternalServerErrorException('Failed to execute simulation on OpenMM: ' + error.message);
     }
   }
-
-
 }
