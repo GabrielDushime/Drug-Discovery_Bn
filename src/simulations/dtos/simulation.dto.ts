@@ -49,8 +49,8 @@ export class UpdateSimulationStatusDto {
     description: 'The updated status of the simulation',
   })
   @IsEnum(SimulationStatus)
-  @IsNotEmpty()
-  status: SimulationStatus;
+  @IsOptional()
+  status?: SimulationStatus;
 
   @ApiProperty({
     example: 'Error in force field parameters',
@@ -62,8 +62,23 @@ export class UpdateSimulationStatusDto {
   errorMessage?: string;
 
   @ApiProperty({
-    example: { bindingAffinity: -9.2, rmsd: 1.5 },
-    description: 'Results of the simulation',
+    example: { 
+      statistics: {
+        mean_potential_energy: 100000.5,
+        std_potential_energy: 50.2,
+        mean_temperature: 310.1,
+        mean_pressure: 1.01
+      },
+      convergence_metrics: {
+        energy_rmsd: 0.005,
+        temperature_stability: 1.2
+      },
+      trajectory_sample: {
+        time: [0, 10, 20],
+        potential_energy: [99989.1, 99992.2, 100001.3]
+      }
+    },
+    description: 'Processed results of the simulation',
     required: false,
   })
   @IsObject()
@@ -93,7 +108,26 @@ export class SimulationResponseDto {
   @ApiProperty({ nullable: true })
   resultPath: string;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ 
+    nullable: true,
+    description: 'Detailed simulation results with processed data',
+    example: {
+      statistics: {
+        mean_potential_energy: 100000.5,
+        std_potential_energy: 50.2,
+        mean_temperature: 310.1,
+        mean_pressure: 1.01
+      },
+      convergence_metrics: {
+        energy_rmsd: 0.005,
+        temperature_stability: 1.2
+      },
+      trajectory_sample: {
+        time: [0, 10, 20],
+        potential_energy: [99989.1, 99992.2, 100001.3]
+      }
+    }
+  })
   results: object;
 
   @ApiProperty()
@@ -110,4 +144,54 @@ export class SimulationResponseDto {
 
   @ApiProperty()
   molecularModelId: string;
+}
+
+// Add a new DTO for simulation analytics
+export class SimulationAnalyticsDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ enum: SimulationType })
+  type: SimulationType;
+
+  @ApiProperty({ 
+    description: 'Statistical analysis of the simulation results',
+    example: {
+      mean_potential_energy: 100000.5,
+      std_potential_energy: 50.2,
+      mean_temperature: 310.1,
+      mean_pressure: 1.01,
+      equilibration_time: 500.0
+    }
+  })
+  statistics: Record<string, number>;
+
+  @ApiProperty({ 
+    description: 'Metrics for evaluating simulation quality and convergence',
+    example: {
+      energy_rmsd: 0.005,
+      temperature_stability: 1.2,
+      pressure_stability: 0.05,
+      equilibration_percentage: 25.0
+    }
+  })
+  convergence_metrics: Record<string, number>;
+
+  @ApiProperty({
+    description: 'Sampled trajectory data points for visualization',
+    example: {
+      time: [0, 200, 400, 600, 800, 1000],
+      potential_energy: [99989.1, 99992.2, 100001.3, 100005.7, 100003.8, 100002.1]
+    }
+  })
+  trajectory_sample: Record<string, Array<number>>;
+
+  @ApiProperty({
+    description: 'Total simulation time in picoseconds',
+    example: 1000.0
+  })
+  simulation_time: number;
 }

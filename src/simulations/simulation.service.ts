@@ -2,7 +2,7 @@ import { Injectable, NotFoundException,Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Simulation } from './entities/simulation.entity';
-import { CreateSimulationDto, UpdateSimulationStatusDto } from './dtos/simulation.dto';
+import { CreateSimulationDto, SimulationAnalyticsDto, UpdateSimulationStatusDto } from './dtos/simulation.dto';
 import { SimulationStatus } from './entities/simulation.entity';
 import { User } from '../users/entities/user.entity';
 import { MolecularModel } from '../molecular-models/entities/molecular-model.entity';
@@ -90,6 +90,7 @@ export class SimulationService {
     await this.simulationRepository.remove(simulation);
   }
 
+  
   async runDistributedSimulation(simulationId: string): Promise<any> {
     
     const simulation = await this.simulationRepository.findOne({ 
@@ -119,10 +120,6 @@ export class SimulationService {
       this.logger.log(`Executing command: ${command}`);
       
       exec(command, (error, stdout, stderr) => {
-      
-    
-
-      
         if (error) {
           this.logger.error(`Dask computation failed for simulation ${simulationId}: ${stderr}`);
           
@@ -163,6 +160,38 @@ export class SimulationService {
     });
   }
 
-
+  // New method to extract analytics from simulation results
+  async getSimulationAnalytics(simulationId: string): Promise<SimulationAnalyticsDto> {
+    const simulation = await this.simulationRepository.findOne({ 
+      where: { id: simulationId }
+    });
+    
+    if (!simulation) {
+      throw new NotFoundException(`Simulation with ID ${simulationId} not found`);
+    }
+    
+    if (simulation.status !== SimulationStatus.COMPLETED) {
+      throw new NotFoundException(`Simulation ${simulationId} has not completed successfully`);
+    }
+    
+    if (!simulation.results) {
+      throw new NotFoundException(`No results found for simulation ${simulationId}`);
+    }
+    
+    const results = simulation.results as any;
+    
+    // Create the analytics response
+    const analytics: SimulationAnalyticsDto = {
+      id: simulation.id,
+      name: simulation.name,
+      type: simulation.type,
+      statistics: results.statistics || {},
+      convergence_metrics: results.convergence_metrics || {},
+      trajectory_sample: results.trajectory_sample || {},
+      simulation_time: results.simulation_time || 0
+    };
+    
+    return analytics;
+  }
 
 }

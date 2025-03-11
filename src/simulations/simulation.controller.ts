@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { SimulationService } from './simulation.service';
-import { CreateSimulationDto, SimulationResponseDto } from './dtos/simulation.dto';
+import { CreateSimulationDto, SimulationAnalyticsDto, SimulationResponseDto } from './dtos/simulation.dto';
 import { UserRole } from '../users/entities/user.entity';
 import { Request } from '../common/interfaces/request.interface'; 
 
@@ -105,6 +105,32 @@ export class SimulationsController {
         throw error;
       }
       throw new InternalServerErrorException('Failed to execute simulation on OpenMM: ' + error.message);
+    }
+  }
+
+  // New endpoint for retrieving simulation analytics
+  @Get('/analytics/:id')
+  @Roles(UserRole.ADMIN, UserRole.USER)
+  @ApiOperation({ summary: 'Get processed analytics data for a completed simulation' })
+  @ApiParam({ name: 'id', description: 'Simulation ID', type: 'string' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns processed analytics from the simulation results',
+    type: SimulationAnalyticsDto,
+  })
+  @ApiResponse({ status: 404, description: 'Simulation not found or not completed' })
+  async getSimulationAnalytics(@Param('id') id: string) {
+    try {
+      this.logger.log(`Retrieving analytics for simulation ID: ${id}`);
+      const analytics = await this.simulationsService.getSimulationAnalytics(id);
+      this.logger.log(`Successfully retrieved analytics for simulation ${id}`);
+      return analytics;
+    } catch (error) {
+      this.logger.error(`Failed to retrieve analytics for simulation ${id}: ${error.message}`);
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException('Failed to retrieve simulation analytics: ' + error.message);
     }
   }
 }
