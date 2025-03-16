@@ -21,7 +21,7 @@ async function bootstrap() {
   });
 
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 8000;
   await app.listen(port);
   
   console.log(`Welcome to Scientific Computing for Drug Discovery!`);
