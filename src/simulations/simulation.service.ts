@@ -193,4 +193,17 @@ export class SimulationService {
     return analytics;
   }
 
+
+  async getUserSimulations(userId: string): Promise<Simulation[]> {
+    this.logger.log(`Fetching simulations for user ID: ${userId}`);
+    const simulations = await this.simulationRepository.find({ 
+      where: { userId },
+      relations: ['user', 'molecularModel'],
+      order: { 
+        startedAt: 'DESC'  
+      }
+    });
+    this.logger.log(`Found ${simulations.length} simulations for user ID: ${userId}`);
+    return simulations;
+  }
 }

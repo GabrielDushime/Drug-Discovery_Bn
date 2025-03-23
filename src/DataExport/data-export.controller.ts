@@ -19,7 +19,7 @@ export class DataExportController {
   constructor(private readonly dataExportService: DataExportService) {}
 
   @Get('json/:id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Export simulation results as JSON' })
   @ApiParam({ name: 'id', description: 'Simulation ID to export', type: 'string' })
   @ApiResponse({ status: 200, description: 'JSON file download' })
@@ -40,7 +40,7 @@ export class DataExportController {
   }
 
   @Get('csv/:id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Export simulation trajectory data as CSV' })
   @ApiParam({ name: 'id', description: 'Simulation ID to export', type: 'string' })
   @ApiResponse({ status: 200, description: 'CSV file download' })
@@ -61,7 +61,7 @@ export class DataExportController {
   }
 
   @Get('pdf/:id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Export simulation results as PDF report' })
   @ApiParam({ name: 'id', description: 'Simulation ID to export', type: 'string' })
   @ApiResponse({ status: 200, description: 'PDF file download' })

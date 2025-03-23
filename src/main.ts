@@ -3,9 +3,18 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { setupSwagger } from '../swagger.config';
 import { ValidationPipe } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path'
 
 async function bootstrap() {
   dotenv.config();
+
+
+  const uploadDir = path.join(process.cwd(), 'uploads', 'profiles');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
 
   const app = await NestFactory.create(AppModule);
   setupSwagger(app);

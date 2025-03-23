@@ -86,7 +86,7 @@ export class DataExportService {
         const doc = new PDFDocument();
         const stream = fs.createWriteStream(filePath);
         
-        // When stream is closed, resolve the promise with the file path
+        
         stream.on('close', () => {
           this.logger.log(`Exported simulation ${simulationId} as PDF to ${filePath}`);
           resolve(filePath);

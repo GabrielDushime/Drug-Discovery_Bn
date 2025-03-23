@@ -19,7 +19,7 @@ export class SimulationsController {
   constructor(private readonly simulationsService: SimulationService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Create a new simulation' })
   @ApiResponse({
     status: 201,
@@ -39,7 +39,7 @@ export class SimulationsController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get all simulations' })
   @ApiResponse({
     status: 200,
@@ -50,8 +50,35 @@ export class SimulationsController {
     return await this.simulationsService.getAllSimulations();
   }
 
+
+  @Get('my-simulations')
+  @Roles(UserRole.RESEARCHER)
+  @ApiOperation({ summary: 'Get all simulations for the current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all simulations for the current user',
+    type: [SimulationResponseDto],
+  })
+  async getUserSimulations(@Req() req: Request) {
+    try {
+      const user = req.user;
+      if (!user) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
+      
+      this.logger.log(`Getting simulations for user ID: ${user.id}`);
+      return await this.simulationsService.getUserSimulations(user.id);
+    } catch (error) {
+      this.logger.error(`Error retrieving user simulations: ${error.message}`);
+      throw new HttpException(
+        error.message || 'Failed to retrieve user simulations', 
+        error instanceof NotFoundException ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Get a simulation by ID' })
   @ApiResponse({
     status: 200,
@@ -68,7 +95,7 @@ export class SimulationsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Delete a simulation' })
   @ApiResponse({ status: 204, description: 'The simulation has been successfully deleted' })
   @ApiResponse({ status: 404, description: 'Simulation not found' })
@@ -82,7 +109,7 @@ export class SimulationsController {
   }
 
   @Post('/run-dask/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Run Distributed Simulation with OpenMM & Dask' })
   @ApiParam({ name: 'id', description: 'Simulation ID to run', type: 'string' })
   @ApiResponse({ status: 200, description: 'Simulation started successfully' })
@@ -110,7 +137,7 @@ export class SimulationsController {
 
   
   @Get('/analytics/:id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Get processed analytics data for a completed simulation' })
   @ApiParam({ name: 'id', description: 'Simulation ID', type: 'string' })
   @ApiResponse({

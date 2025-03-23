@@ -9,6 +9,9 @@ import { Simulation } from './simulations/entities/simulation.entity';
 import { MolecularModelsModule } from './molecular-models/molecular-models.module';
 import { SimulationsModule } from './simulations/simulation.module';
 import { ExportVisualizationModule } from './export-visualization/export-visualization.module';
+import { ProfileModule } from './auth/Profile/profile.module';
+import { StaticAssetsModule } from './auth/Profile/static-assets/static-assets.module';
+
 
 @Module({
   imports: [
@@ -28,6 +31,8 @@ import { ExportVisualizationModule } from './export-visualization/export-visuali
     MolecularModelsModule,
     SimulationsModule ,
     ExportVisualizationModule,
+    ProfileModule,
+    StaticAssetsModule,
   ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
@@ -15,7 +15,6 @@ export class MolecularModelsService {
     private molecularValidationService: MolecularValidationService,
   ) {}
 
-
   async create(
     createMolecularModelDto: CreateMolecularModelDto,
     file: Express.Multer.File,
@@ -31,13 +30,11 @@ export class MolecularModelsService {
       else if (ext === '.sdf') modelFormat = ModelFormat.SDF;
       else throw new Error('Unsupported file format');
     }
-
-   
+    
     const validation = await this.molecularValidationService.validateMolecularModel(
       file.path,
       modelFormat,
     );
-
     
     const molecularModel = this.molecularModelRepository.create({
       name,
@@ -50,10 +47,9 @@ export class MolecularModelsService {
     });
 
     const savedModel = await this.molecularModelRepository.save(molecularModel);
-    return this.toResponseDto(savedModel);  
+    return this.toResponseDto(savedModel);
   }
 
-  
   private toResponseDto(model: MolecularModel): MolecularModelResponseDto {
     return {
       id: model.id,
@@ -68,53 +64,61 @@ export class MolecularModelsService {
     };
   }
 
- 
   async findAll(userId: string): Promise<MolecularModelResponseDto[]> {
     const models = await this.molecularModelRepository.find({
       where: { userId },
       order: { uploadedAt: 'DESC' },
     });
-    return models.map(model => this.toResponseDto(model));  
+    return models.map(model => this.toResponseDto(model));
   }
 
+  async findAllByAdmin(): Promise<MolecularModelResponseDto[]> {
+    const models = await this.molecularModelRepository.find({
+      order: { uploadedAt: 'DESC' },
+    });
+    return models.map(model => this.toResponseDto(model));
+  }
 
   async findOne(id: string): Promise<MolecularModelResponseDto> {
     const model = await this.molecularModelRepository.findOne({ where: { id } });
     if (!model) {
       throw new NotFoundException(`Molecular model with ID ${id} not found`);
     }
-    return this.toResponseDto(model);  
+    return this.toResponseDto(model);
   }
 
- 
-  async remove(id: string, userId: string): Promise<void> {
-    const model = await this.molecularModelRepository.findOne({ where: { id, userId } });
+  async remove(id: string, userId: string, isAdmin: boolean = false): Promise<void> {
+    const model = await this.molecularModelRepository.findOne({ where: { id } });
+    
     if (!model) {
       throw new NotFoundException(`Molecular model with ID ${id} not found`);
     }
-
+    
+    
+    if (!isAdmin && model.userId !== userId) {
+      throw new ForbiddenException('You do not have permission to delete this model');
+    }
     
     try {
       if (fs.existsSync(model.filePath)) {
-        fs.unlinkSync(model.filePath); 
+        fs.unlinkSync(model.filePath);
       }
     } catch (error) {
       console.error(`Error deleting file: ${error.message}`);
     }
 
-    await this.molecularModelRepository.remove(model);  
+    await this.molecularModelRepository.remove(model);
   }
 
-  
   async getModelFile(id: string): Promise<{ path: string; filename: string }> {
-    const model = await this.findOne(id); 
-
-   
+    const model = await this.findOne(id);
+    
     if (!fs.existsSync(model.filePath)) {
       throw new NotFoundException('Model file not found on disk');
     }
 
-    const filename = path.basename(model.filePath); 
-    return { path: model.filePath, filename }; 
+    const filename = path.basename(model.filePath);
+
+    return { path: model.filePath, filename };
   }
 }

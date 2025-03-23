@@ -82,4 +82,29 @@ export class UsersService {
     await this.usersRepository.remove(user as User);
     
   }
+
+  async findById(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return user;
+  }
+
+  
+
+  async updateEmail(userId: string, email: string): Promise<void> {
+    const user = await this.findById(userId);
+    user.email = email;
+    await this.usersRepository.save(user);
+  }
+
+  async updateFullName(userId: string, fullName: string): Promise<void> {
+    const user = await this.findById(userId);
+    user.fullName = fullName;
+    await this.usersRepository.save(user);
+  }
+
 }

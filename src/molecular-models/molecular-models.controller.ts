@@ -6,15 +6,20 @@ import { MolecularModelsService } from './molecular-models.service';
 import { CreateMolecularModelDto, MolecularModelResponseDto } from './dtos/molecular-model.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Express } from 'express';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @ApiTags('Molecular Models')
 @ApiBearerAuth('Authentication')
 @Controller('molecular-models')
- @UseGuards(JwtAuthGuard) 
+
 export class MolecularModelsController {
   constructor(private readonly molecularModelsService: MolecularModelsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a new molecular model' })
@@ -50,6 +55,8 @@ export class MolecularModelsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Get all molecular models for the current user' })
   @ApiResponse({
     status: 200,
@@ -60,7 +67,26 @@ export class MolecularModelsController {
     return this.molecularModelsService.findAll(req.user.id);
   }
 
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get all molecular models in the system (admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all molecular models',
+    type: [MolecularModelResponseDto],
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Unauthorized - Admin access required',
+  })
+  async findAllByAdmin(): Promise<MolecularModelResponseDto[]> {
+    return this.molecularModelsService.findAllByAdmin();
+  }
+
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Get a molecular model by ID' })
   @ApiResponse({
     status: 200,
@@ -76,6 +102,8 @@ export class MolecularModelsController {
   }
 
   @Get(':id/file')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Download the molecular model file' })
   @ApiResponse({
     status: 200,
@@ -91,6 +119,8 @@ export class MolecularModelsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Delete a molecular model' })
   @ApiResponse({
     status: 200,

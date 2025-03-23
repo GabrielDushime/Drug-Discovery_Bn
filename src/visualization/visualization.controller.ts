@@ -16,7 +16,7 @@ export class VisualizationController {
   constructor(private readonly visualizationService: VisualizationService) {}
 
   @Get('model/:id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Get molecular model data for 3D visualization' })
   @ApiParam({ name: 'id', description: 'Molecular model ID', type: 'string' })
   @ApiResponse({ status: 200, description: 'Returns model data formatted for Three.js visualization' })
@@ -30,7 +30,7 @@ export class VisualizationController {
   }
 
   @Get('trajectory/:id')
-  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Roles(UserRole.ADMIN, UserRole.RESEARCHER)
   @ApiOperation({ summary: 'Get simulation trajectory data for 3D visualization' })
   @ApiParam({ name: 'id', description: 'Simulation ID', type: 'string' })
   @ApiResponse({ status: 200, description: 'Returns trajectory data formatted for Three.js visualization' })
