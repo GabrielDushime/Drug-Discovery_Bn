@@ -17,6 +17,7 @@ import { StaticAssetsModule } from './auth/Profile/static-assets/static-assets.m
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,  
+      envFilePath: '.env'
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
