@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Simulation } from '../simulations/entities/simulation.entity';
 import { MolecularModel } from '../molecular-models/entities/molecular-model.entity';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as os from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execPromise = promisify(exec);
-
 
 interface Atom {
   serial: number;
@@ -32,7 +32,6 @@ interface TrajectoryFrame {
   potentialEnergy: any;
   kineticEnergy: any;
   temperature: any;
-
 }
 
 interface StructureData {
@@ -42,16 +41,31 @@ interface StructureData {
   bondCount: number;
 }
 
+function getScriptsDirectory(): string {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (isProduction) {
+    // For production, use a dedicated scripts directory
+    return path.join(process.cwd(), 'dist', 'scripts');
+  } else {
+    // For development, use source scripts directory
+    return path.join(process.cwd(), 'src', 'scripts');
+  }
+}
+
 @Injectable()
 export class VisualizationService {
   private readonly logger = new Logger(VisualizationService.name);
+  private readonly scriptsDir: string;
 
   constructor(
     @InjectRepository(Simulation)
     private readonly simulationRepository: Repository<Simulation>,
     @InjectRepository(MolecularModel)
     private readonly molecularModelRepository: Repository<MolecularModel>,
-  ) {}
+  ) {
+    this.scriptsDir = getScriptsDirectory();
+  }
 
   async getModelForVisualization(molecularModelId: string): Promise<any> {
     try {
@@ -63,14 +77,12 @@ export class VisualizationService {
         throw new NotFoundException(`Molecular model with ID ${molecularModelId} not found`);
       }
       
-      
       const modelPath = model.filePath;
       
-      if (!modelPath || !fs.existsSync(modelPath)) {
+      if (!modelPath || !await fs.pathExists(modelPath)) {
         throw new NotFoundException(`Model file not found at ${modelPath}`);
       }
       
-   
       const structureData = await this.processPDBForThreeJS(modelPath);
       
       return {
@@ -100,16 +112,13 @@ export class VisualizationService {
         throw new NotFoundException(`No molecular model associated with simulation ${simulationId}`);
       }
       
-     
       const modelData = await this.getModelForVisualization(simulation.molecularModelId);
       
-     
       const results = simulation.results as any;
       
       if (!results || !results.trajectory_sample) {
         throw new NotFoundException(`No trajectory data available for simulation ${simulationId}`);
       }
-      
       
       const trajectoryFrames = this.formatTrajectoryForThreeJS(results.trajectory_sample);
       
@@ -131,8 +140,14 @@ export class VisualizationService {
 
   private async processPDBForThreeJS(pdbFilePath: string): Promise<StructureData> {
     try {
-  
-      const validationScriptPath = path.join(process.cwd(), 'src/scripts/molecular_validation.py');
+      // Use the dynamic scripts directory
+      const validationScriptPath = path.join(this.scriptsDir, 'molecular_validation.py');
+      
+      // Ensure the script exists
+      if (!await fs.pathExists(validationScriptPath)) {
+        throw new Error(`Validation script not found at ${validationScriptPath}`);
+      }
+      
       const { stdout } = await execPromise(`python ${validationScriptPath} ${pdbFilePath}`);
       
       const validationResult = JSON.parse(stdout);
@@ -141,15 +156,12 @@ export class VisualizationService {
         throw new Error(`Invalid PDB file: ${validationResult.message || validationResult.error}`);
       }
       
-     
-      const pdbContent = fs.readFileSync(pdbFilePath, 'utf8');
+      const pdbContent = await fs.readFile(pdbFilePath, 'utf8');
       
-  
       const atoms: Atom[] = [];
       const lines = pdbContent.split('\n');
       
       for (const line of lines) {
-       
         if (line.startsWith('ATOM') || line.startsWith('HETATM')) {
           try {
             const atomType = line.substring(76, 78).trim();
@@ -173,11 +185,9 @@ export class VisualizationService {
             });
           } catch (e) {
             this.logger.warn(`Error parsing atom line: ${line}`);
-          
           }
         }
       }
-      
       
       const bonds = this.calculateSimplifiedBonds(atoms);
       
@@ -194,16 +204,13 @@ export class VisualizationService {
   }
 
   private calculateSimplifiedBonds(atoms: Atom[]): Bond[] {
-    
     const bonds: Bond[] = [];
     const maxBondDistance = 2.0; 
     
-  
     for (let i = 0; i < atoms.length; i++) {
       for (let j = i + 1; j < atoms.length; j++) {
         const atom1 = atoms[i];
         const atom2 = atoms[j];
-        
         
         if (atom1.residueNumber !== atom2.residueNumber && 
             Math.abs(atom1.residueNumber - atom2.residueNumber) > 1) {
@@ -230,22 +237,17 @@ export class VisualizationService {
   }
 
   private formatTrajectoryForThreeJS(trajectoryData: any): TrajectoryFrame[] {
-   
     const frames: TrajectoryFrame[] = [];
-    
     
     const times = trajectoryData.time || [];
     const numFrames = times.length;
     
     for (let i = 0; i < numFrames; i++) {
-      
       frames.push({
         time: times[i],
-        
         potentialEnergy: trajectoryData.potential_energy?.[i] || 0,
         kineticEnergy: trajectoryData.kinetic_energy?.[i] || 0,
         temperature: trajectoryData.temperature?.[i] || 0,
-       
       });
     }
     
