@@ -91,7 +91,6 @@ export class SimulationService {
 
   
   async runDistributedSimulation(simulationId: string): Promise<any> {
-    
     const simulation = await this.simulationRepository.findOne({ 
       where: { id: simulationId }
     });
@@ -103,6 +102,8 @@ export class SimulationService {
     await this.updateSimulationStatus(simulationId, { status: SimulationStatus.PROCESSING });
     
     return new Promise((resolve, reject) => {
+      // Use the full path to python3 or the python in the virtual environment
+      const pythonPath = '/opt/venv/bin/python3';
       const scriptPath = path.join(process.cwd(), 'src/scripts/dask_worker.py');
       
       const simulationData = JSON.stringify({
@@ -112,9 +113,8 @@ export class SimulationService {
       
       this.logger.log(`Starting Dask simulation for ID: ${simulationId}`);
       
-     
       const safeJson = JSON.stringify(simulationData); 
-      const command = `python ${scriptPath} ${simulationId} '${safeJson}'`;
+      const command = `${pythonPath} ${scriptPath} ${simulationId} '${safeJson}'`;
       
       this.logger.log(`Executing command: ${command}`);
       
