@@ -105,7 +105,7 @@ def run_simulation(task_id, data):
             "statistics": stats,
             "convergence_metrics": convergence,
             "trajectory_sample": trajectory_sample,
-            "simulation_time": float(time_array[-1]),  # Total simulation time in picoseconds
+            "simulation_time": float(time_array[-1]),  
             "total_frames": len(df)
         }
         
