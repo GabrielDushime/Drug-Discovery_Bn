@@ -58,13 +58,13 @@ export class Simulation {
   @Column({ type: 'timestamptz', nullable: true })
   completedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.simulations)
+  @ManyToOne(() => User, (user) => user.simulations, { onDelete: 'CASCADE' })
   user: User;
 
   @Column()
   userId: string;
 
-  @ManyToOne(() => MolecularModel, (model) => model.simulations)
+  @ManyToOne(() => MolecularModel, (model) => model.simulations, { onDelete: 'CASCADE' })
   molecularModel: MolecularModel;
 
   @Column()

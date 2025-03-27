@@ -1,7 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '../../../users/entities/user.entity';
 
-
 @Entity('profiles')
 export class Profile {
   @PrimaryGeneratedColumn('uuid')
@@ -37,10 +36,13 @@ export class Profile {
   @Column({ nullable: true, type: 'varchar' })
   photoFilename: string | null;
 
-  @OneToOne(() => User)
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  @Column({ nullable: true, type: 'uuid' })
+  userId: string | null;
 
-  @Column({ type: 'uuid' })
-  userId: string;
+  @OneToOne(() => User, user => user.profile, {
+    onDelete: 'CASCADE',
+    nullable: true
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: User | null;
 }

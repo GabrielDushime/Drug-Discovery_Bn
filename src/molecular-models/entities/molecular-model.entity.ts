@@ -37,12 +37,15 @@ export class MolecularModel {
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   uploadedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.molecularModels)
+  @ManyToOne(() => User, (user) => user.molecularModels, { onDelete: 'CASCADE' })
   user: User;
 
   @Column()
   userId: string;
 
-  @OneToMany(() => Simulation, (simulation) => simulation.molecularModel)
+  @OneToMany(() => Simulation, (simulation) => simulation.molecularModel, { 
+    cascade: true,
+    onDelete: 'CASCADE' 
+  })
   simulations: Simulation[];
 }
