@@ -11,6 +11,7 @@ import { SimulationsModule } from './simulations/simulation.module';
 import { ExportVisualizationModule } from './export-visualization/export-visualization.module';
 import { ProfileModule } from './auth/Profile/profile.module';
 import { StaticAssetsModule } from './auth/Profile/static-assets/static-assets.module';
+import { WelcomeController } from './AppController';
 
 
 @Module({
@@ -35,5 +36,6 @@ import { StaticAssetsModule } from './auth/Profile/static-assets/static-assets.m
     ProfileModule,
     StaticAssetsModule,
   ],
+  controllers: [WelcomeController],
 })
 export class AppModule {}
